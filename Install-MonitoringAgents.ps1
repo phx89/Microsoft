@@ -7,6 +7,10 @@
     configures them with appropriate settings, and sets up Windows services.
 .PARAMETER DataSourceUrl
     The Prometheus endpoint for metrics (without protocol)
+.PARAMETER DataSourceUrl
+    The Prometheus endpoint username (Basic-Auth)
+.PARAMETER DataSourceUrl
+    The Prometheus endpoint password (Basic-Auth)
 .PARAMETER AlloyVersion
     Version of Grafana Alloy to install (default: latest)
 .PARAMETER WindowsExporterVersion
@@ -14,14 +18,14 @@
 .PARAMETER InstallPath
     Base installation path (default: C:\monitoring)
 .EXAMPLE
-    .\Install-MonitoringAgents.ps1 -DataSourceUrl "prometheus.monitoring.local" -DataSourseUser "admin" -DataSourseSecret "password"
+    .\Install-MonitoringAgents.ps1 -DataSourceUrl "prometheus.monitoring.local" -DataSourceUser "admin" -DataSourceSecret "password"
 #>
 
 param(
     [string]$ClusterName = "",
-    [string]$DataSourceUrl = "",
-    [string]$DataSourseUser = "admin",
-    [string]$DataSourseSecret = "password",
+    [string]$DataSourceUrl = "prometheus.monitoring.local",
+    [string]$DataSourceUser = "admin",
+    [string]$DataSourceSecret = "password",
     [string]$AlloyVersion = "latest",
     [string]$WindowsExporterVersion = "latest",
     [string]$InstallPath = "C:\Program Files\GrafanaLabs",
@@ -591,18 +595,6 @@ function Update-AlloyConfig {
         [string]$AlloyPath
     )
     
-    #Use default datasource password if not provided
-    if ($DataSourseSecret -ceq "password") {
-        Write-Log "Password is not provided, will use default instead"
-        $EncryptedPass = "01000000d08c9ddf0115d1118c7a00c04fc297eb010000003cf3126737325149bb4172025a657ad200000000020000000000106600000001000020000000f45b85a506682deed20ce3733166d82b16c1fc04ff8bee7f0d6bc185ad1333e2000000000e80000000020000200000009c24ff709251ec853919f669e6653c4f371d69f52b0c1d5b3e6c1ce7c86f83c6200000004b676de96ec687bae77f87b225c03dbf126c47622549a6b0923a4eee77913aa240000000ca82d79c32b236340baaacae1c46a5714c0d100202b91f5fafce2db35a9b79a556c6316b5f07de689bf53f5e8626f4aef0e1e04f87fe63668b393cbec5dbf0eb"
-        $securePassword = ConvertTo-SecureString $EncryptedPass
-        $DecryptedPassword = [System.Runtime.InteropServices.Marshal]::PtrToStringAuto(
-            [System.Runtime.InteropServices.Marshal]::SecureStringToBSTR($securePassword)
-        )
-        $DataSourseSecret = $DecryptedPassword
-    }
-
-
     $hostname = $env:COMPUTERNAME
     $AlloyPathEscaped = $AlloyPath -replace "\\", "\\"
     if ([string]::IsNullOrEmpty($ClusterName)) {
@@ -635,8 +627,8 @@ prometheus.remote_write "metrics_service" {
     url = "https://$DataSourceUrl/api/v1/write"
     // Basic authentication
     basic_auth {
-      username = "$DataSourseUser"
-      password = "$DataSourseSecret"
+      username = "$DataSourceUser"
+      password = "$DataSourceSecret"
     }
   }
     external_labels = {
