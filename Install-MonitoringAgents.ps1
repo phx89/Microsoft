@@ -7,9 +7,9 @@
     configures them with appropriate settings, and sets up Windows services.
 .PARAMETER DataSourceUrl
     The Prometheus endpoint for metrics (without protocol)
-.PARAMETER DataSourceUrl
+.PARAMETER DataSourceUser
     The Prometheus endpoint username (Basic-Auth)
-.PARAMETER DataSourceUrl
+.PARAMETER DataSourceSecret
     The Prometheus endpoint password (Basic-Auth)
 .PARAMETER AlloyVersion
     Version of Grafana Alloy to install (default: latest)
